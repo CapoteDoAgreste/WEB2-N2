@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const videoTutorial_1 = __importDefault(require("../middlewares/videoTutorial"));
 const fs_1 = __importDefault(require("fs"));
+const events_1 = require("events");
 jest.mock("fs");
 describe("videoTutorial Middleware", () => {
     it("deve retornar erro 404 se o vídeo não for encontrado", () => __awaiter(void 0, void 0, void 0, function* () {
@@ -22,15 +23,15 @@ describe("videoTutorial Middleware", () => {
             status: jest.fn().mockReturnThis(),
             send: jest.fn(),
         };
-        // Mock do fs.createReadStream para simular erro de forma assíncrona
+        // Mock fs.createReadStream to simulate an asynchronous error event
         fs_1.default.createReadStream.mockImplementationOnce(() => {
-            const error = new Error("File not found");
+            const stream = new events_1.EventEmitter();
             process.nextTick(() => {
-                throw error;
+                stream.emit("error", new Error("File not found"));
             });
-            return {}; // Retorna um objeto vazio para satisfazer o tipo
+            return stream;
         });
-        // Chama o middleware
+        // Call the middleware
         yield (0, videoTutorial_1.default)(req, res, jest.fn());
         expect(res.status).toHaveBeenCalledWith(404);
         expect(res.send).toHaveBeenCalledWith("Video not found");
@@ -41,7 +42,7 @@ describe("videoTutorial Middleware", () => {
             setHeader: jest.fn(),
             pipe: jest.fn(),
         };
-        // Mock do fs.createReadStream para retornar um stream
+        // Mock fs.createReadStream to return a stream (in this case, a simple string "stream")
         fs_1.default.createReadStream.mockReturnValueOnce("stream");
         yield (0, videoTutorial_1.default)(req, res, jest.fn());
         expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "video/mp4");
