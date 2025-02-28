@@ -17,9 +17,6 @@ export const io = new Server(server, {
   },
 });
 
-// Definindo a porta do servidor
-const PORT = process.env.PORT || 3000;
-
 // Middleware para parsing de JSON
 app.use(express.json());
 
@@ -27,9 +24,16 @@ app.use(express.json());
 app.use("/api", userRoutes);
 
 // Iniciando o servidor HTTP (incluindo WebSocket com Socket.IO)
-server.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-  console.log("USER:", process.env.USER);
-  console.log("PASSWORD:", process.env.PASSWORD);
-  console.log("JWT_SECRET:", process.env.JWT_SECRET);
-});
+if (process.env.NODE_ENV !== "test") {
+  const PORT = process.env.PORT || 3000;
+
+  server.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log("USER:", process.env.USER);
+    console.log("PASSWORD:", process.env.PASSWORD);
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
+  });
+}
+
+// Para serverless: exporte um handler
+export const handler = server;
